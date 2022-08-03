@@ -1,0 +1,4 @@
+;------------------ Run Ztilt Correction ------------
+G30 P0 X0 Y22 Z-99999				; Probe near Leadscrew 1
+G30 P1 X251 Y22 Z-99999				; Probe near Leadscrew 2
+G30 P2 X126.5 Y235 Z-99999 S3		; Probe near Leadscrew 3
