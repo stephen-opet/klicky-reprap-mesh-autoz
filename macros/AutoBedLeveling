@@ -1,4 +1,44 @@
+; Run Z Tilt Correction for 3 leadscrews
+;----------------- PRINTER-SPECIFIC VARIABLES, REDEFINE ------------------------
+var klickyDockX = 41.5 		; X Coordinate of Klicky Dock
+var klickyDockY = 257 		; Y Coordinate of Klicky Dock
+var klickyOffsetX = 0		; Offset between nozzle & Klicky in X
+var klickyOffsetY = 19		; Offset between nozzle & Klicky in Y
+var klickyOffsetZ = 7.2		; Offset between nozzle & Klicky in Z
+var LS1X = 0				; Point on bed near Leadscrew 1 in X...
+var LS1Y = 22					;... and Y
+var LS2X = 251				; Point on bed near Leadscrew 2 in X...
+var LS2Y = 22					;... and Y
+var LS3X =126.5				; Point on bed near Leadscrew 3 in X...
+var LS3Y = 235					; ... and Y
+;--------------------------------------------------------------------------------
+
+;-------- Setup -----------------------------------------
+if !move.axes[0].homed || !move.axes[1].homed || !move.axes[2].homed
+G28									; home axis if needed
+M561                                ; clear bed transform         
+G29 S2                              ; DISABLE ANY MESH
+G1 H2 Z10 F1800						; Z Hop
+M558 P5 C"^e0stop" H5 F240 T9000
+
+;---------------- Load Klicky -----------------------
+G1 X{var.klickyDockX} Y{var.klickyDockY - 60} F6000	; position head in front of Klicky Dock
+G1 X{var.klickyDockX} Y{var.klickyDockY} F6000			; Load klicky
+G1 X{var.klickyDockX} Y{var.klickyDockY - 60} F6000	; Retreat from Klicky Dock
+
 ;------------------ Run Ztilt Correction ------------
-G30 P0 X0 Y22 Z-99999				; Probe near Leadscrew 1
-G30 P1 X251 Y22 Z-99999				; Probe near Leadscrew 2
-G30 P2 X126.5 Y235 Z-99999 S3		; Probe near Leadscrew 3
+G31 P1000 X{var.klickyOffsetX} Y{var.klickyOffsetY} Z{var.klickyOffsetZ}	; Set Klicky Offsets
+G30 P0 X{var.LS1X} Y{var.LS1Y} Z-99999				; Probe near Leadscrew 1
+G30 P1 X{var.LS2X} Y{var.LS2Y} Z-99999				; Probe near Leadscrew 2
+G30 P2 X{var.LS3X} Y{var.LS3Y} Z-99999 S3			; Probe near Leadscrew 3 & correct 3pt tilt
+
+;-------------------------------- Dock Klicky -----------
+G1 X{var.klickyDockX} Y{var.klickyDockY-60} F6000			
+G1 X{var.klickyDockX} Y{var.klickyDockY} F6000
+G1 X{var.klickyDockX+60} Y{var.klickyDockY} F6000
+
+;---------------------------------------- Finish Up --------
+M574 X2 S1 P"xstop"                            ; configure microswitch endstop for high end on X 
+M574 Y2 S1 P"ystop"                            ; configure microswitch endstop for high end on Y 
+M574 Z1 S1 P"zstop"                            ; configure microswitch endstop for low  end on Z 
+G28    
